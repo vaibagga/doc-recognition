@@ -52,7 +52,7 @@ def main():
                 running_iou = 0.0
                 running_loss = 0.0
                 for inputs, labels in tqdm(val, desc="Running validation predictions"):
-                    optimizer.zero_grad()
+                    #optimizer.zero_grad()
                     inputs = inputs.permute(0, 3, 1, 2)
                     labels = labels.permute(0, 3, 1, 2)
                     outputs = model(inputs)

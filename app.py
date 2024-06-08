@@ -1,3 +1,5 @@
+import json
+
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from PIL import Image
@@ -7,15 +9,22 @@ import torch
 import torch.nn.functional as F
 from torchvision import transforms
 import pandas as pd
+from json import JSONEncoder
 
 from src.models import UNet
+
+class NumpyArrayEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return JSONEncoder.default(self, obj)
 
 # Initialize the FastAPI application
 app = FastAPI()
 
 # Load your pre-trained PyTorch model
 model = UNet()
-model.load_state_dict(torch.load('model/UNET_Adam_64_1e-05.pth'))
+model.load_state_dict(torch.load('model/UNET_Adam.pth'))
 
 # Define the image transformation
 transform = transforms.Compose([
@@ -47,9 +56,37 @@ async def predict(file: UploadFile = File(...)):
         with torch.no_grad():
             outputs = model(processed_image)
 
+        encoded_numpy = json.dumps(outputs.detach().numpy()[0,0,:,:], cls=NumpyArrayEncoder)
+
 
         response = {
-            'predicted_class': pd.Series(outputs.detach().numpy()).to_json(orient='values')
+            "predicted_class": encoded_numpy,
+            "code": 200
+        }
+        return JSONResponse(content=response)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/predict_on_video")
+async def predict(file: UploadFile = File(...)):
+    """Handle image prediction requests."""
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file selected")
+
+    try:
+        image = Image.open(io.BytesIO(await file.read()))
+        processed_image = preprocess_image(image)
+        ##print(processed_image)
+        with torch.no_grad():
+            outputs = model(processed_image)
+
+        encoded_numpy = json.dumps(outputs.detach().numpy()[0,0,:,:], cls=NumpyArrayEncoder)
+
+
+        response = {
+            "predicted_class": encoded_numpy,
+            "code": 200
         }
         return JSONResponse(content=response)
 
@@ -57,7 +94,7 @@ async def predict(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
 if __name__ == '__main__':
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)

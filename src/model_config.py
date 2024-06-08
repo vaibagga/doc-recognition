@@ -10,7 +10,7 @@ seg_model_configs = {
 }
 
 seg_model_configs_test = {
-    "learning_rate": [1e-5],
+    "learning_rate": [1e-4],
     "batch_size": [64],
     "optimizers": ["Adam"]
 }
