@@ -7,7 +7,7 @@ This app uses MaskRCNN, UNets, and YOLOv8 to detect documents. This is built usi
 
 ### Runnning the training script along with hyperaparameter tuning
 ```pip install -r requirements.txt``` <br>
-```python train.py```
+```python src/train.py```
 
 ### Running FastAPI app
 #### Downloading pretrained weights
@@ -15,6 +15,8 @@ This app uses MaskRCNN, UNets, and YOLOv8 to detect documents. This is built usi
 <br>
 
 ```pip install -r requirements.txt```
+
+```python app.py```
 
 #### Running
 Go to <a href="http://0.0.0.0:8000/docs"> Swagger UI </a><br>
